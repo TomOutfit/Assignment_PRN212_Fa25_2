@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -33,9 +34,9 @@ namespace StudentNameWPF
             if (value is ObservableCollection<BookingDisplayModel> bookings)
             {
                 var total = bookings.Sum(b => b.TotalAmount);
-                return total.ToString("C", CultureInfo.CurrentCulture);
+                return $"${total:0}";
             }
-            return "$0.00";
+            return "$0";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -57,6 +58,58 @@ namespace StudentNameWPF
                 }
             }
             return value?.ToString() ?? string.Empty;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class BooleanToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+            {
+                // If parameter is "Invert", invert the boolean
+                if (parameter is string param && param == "Invert")
+                {
+                    boolValue = !boolValue;
+                }
+                
+                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RoomTypeConverter : IValueConverter
+    {
+        private static readonly Dictionary<int, string> RoomTypeNames = new Dictionary<int, string>
+        {
+            { 1, "Standard Single" },
+            { 2, "Standard Double" },
+            { 3, "Deluxe Suite" },
+            { 4, "Family Room" },
+            { 5, "Executive Suite" },
+            { 6, "Presidential Suite" },
+            { 7, "Ocean View" },
+            { 8, "Garden View" }
+        };
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int roomTypeId && RoomTypeNames.ContainsKey(roomTypeId))
+            {
+                return RoomTypeNames[roomTypeId];
+            }
+            return value?.ToString() ?? "Unknown";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

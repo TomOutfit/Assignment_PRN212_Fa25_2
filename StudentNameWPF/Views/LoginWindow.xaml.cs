@@ -41,7 +41,7 @@ namespace StudentNameWPF.Views
             System.Diagnostics.Debug.WriteLine($"PasswordBox_PasswordChanged called - Password length: {PasswordBox.Password?.Length ?? 0}");
             if (DataContext is LoginViewModel viewModel)
             {
-                viewModel.Password = PasswordBox.Password;
+                viewModel.Password = PasswordBox.Password ?? string.Empty;
                 System.Diagnostics.Debug.WriteLine($"Password set in ViewModel - Length: {viewModel.Password?.Length ?? 0}");
             }
         }

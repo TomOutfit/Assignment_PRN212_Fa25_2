@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Windows.Controls.Primitives;
+using LiveCharts;
+using LiveCharts.Wpf;
+using LiveCharts.Defaults;
 
 namespace StudentNameWPF.Views.Charts
 {
@@ -13,148 +13,90 @@ namespace StudentNameWPF.Views.Charts
     {
         private List<MonthlyRevenueData> _data = new();
         
+        public SeriesCollection SeriesCollection { get; set; }
+        public string[] Labels { get; set; }
+        public Func<double, string> YFormatter { get; set; }
+        public Func<double, string> XFormatter { get; set; }
+        
         public MonthlyRevenueChart()
         {
             InitializeComponent();
+            DataContext = this;
+            
+            SeriesCollection = new SeriesCollection();
+            Labels = new string[0];
+            YFormatter = value => $"${value:N0}";
+            XFormatter = value => value.ToString();
         }
         
         public void UpdateData(List<MonthlyRevenueData> data)
         {
             _data = data ?? new List<MonthlyRevenueData>();
             System.Diagnostics.Debug.WriteLine($"MonthlyRevenueChart: Updating with {_data.Count} data points");
-            DrawChart();
+            UpdateChart();
         }
         
-        private void DrawChart()
+        private void UpdateChart()
         {
-            ChartCanvas.Children.Clear();
-            
-            var canvasWidth = ChartCanvas.ActualWidth > 0 ? ChartCanvas.ActualWidth : 400;
-            var canvasHeight = ChartCanvas.ActualHeight > 0 ? ChartCanvas.ActualHeight : 300;
-            
-            if (canvasWidth <= 0 || canvasHeight <= 0) return;
-            
             if (!_data.Any())
             {
                 NoDataText.Visibility = Visibility.Visible;
+                Chart.Visibility = Visibility.Collapsed;
                 System.Diagnostics.Debug.WriteLine("MonthlyRevenueChart: No data to display");
                 return;
             }
             
             NoDataText.Visibility = Visibility.Collapsed;
+            Chart.Visibility = Visibility.Visible;
             System.Diagnostics.Debug.WriteLine($"MonthlyRevenueChart: Drawing chart with {_data.Count} data points");
             
-            var margin = 40;
-            var chartWidth = canvasWidth - 2 * margin;
-            var chartHeight = canvasHeight - 2 * margin;
+            // Create labels for X-axis (limit to prevent overlap)
+            var maxLabels = Math.Min(_data.Count, 12); // Show max 12 labels to prevent overlap
+            var step = Math.Max(1, _data.Count / maxLabels);
+            Labels = _data.Where((item, index) => index % step == 0 || index == _data.Count - 1)
+                          .Select(d => d.MonthName)
+                          .ToArray();
             
-            var maxRevenue = _data.Max(d => d.Revenue);
-            if (maxRevenue <= 0) maxRevenue = 1;
+            // Create revenue values
+            var revenueValues = _data.Select(d => (double)d.Revenue).ToArray();
             
-            // Draw axes
-            var xAxis = new Line
+            // Create series
+            SeriesCollection.Clear();
+            
+            // Add column series for revenue bars
+            SeriesCollection.Add(new ColumnSeries
             {
-                X1 = margin,
-                Y1 = margin + chartHeight,
-                X2 = margin + chartWidth,
-                Y2 = margin + chartHeight,
-                Stroke = Brushes.Gray,
-                StrokeThickness = 2
-            };
-            ChartCanvas.Children.Add(xAxis);
+                Title = "Monthly Revenue",
+                Values = new ChartValues<double>(revenueValues),
+                Fill = System.Windows.Media.Brushes.LightBlue,
+                Stroke = System.Windows.Media.Brushes.DodgerBlue,
+                StrokeThickness = 1,
+                DataLabels = false // Disable data labels to prevent overlap
+            });
             
-            var yAxis = new Line
+            // Add line series for trend
+            SeriesCollection.Add(new LineSeries
             {
-                X1 = margin,
-                Y1 = margin,
-                X2 = margin,
-                Y2 = margin + chartHeight,
-                Stroke = Brushes.Gray,
-                StrokeThickness = 2
-            };
-            ChartCanvas.Children.Add(yAxis);
-            
-            // Draw data points and lines
-            var points = new List<Point>();
-            var barWidth = chartWidth / _data.Count * 0.8;
-            var barSpacing = chartWidth / _data.Count;
-            
-            for (int i = 0; i < _data.Count; i++)
-            {
-                var item = _data[i];
-                var x = margin + (i * barSpacing) + (barSpacing - barWidth) / 2;
-                var height = (double)(item.Revenue / maxRevenue) * chartHeight;
-                var y = margin + chartHeight - height;
-                
-                points.Add(new Point(x + barWidth / 2, y));
-                
-                // Draw bar
-                var bar = new Rectangle
-                {
-                    Width = barWidth,
-                    Height = height,
-                    Fill = new SolidColorBrush(Color.FromRgb(75, 192, 192)),
-                    Stroke = new SolidColorBrush(Color.FromRgb(54, 162, 235)),
-                    StrokeThickness = 1
-                };
-                Canvas.SetLeft(bar, x);
-                Canvas.SetTop(bar, y);
-                ChartCanvas.Children.Add(bar);
-                
-                // Add value label
-                var valueLabel = new TextBlock
-                {
-                    Text = $"${item.Revenue:N0}",
-                    FontSize = 10,
-                    Foreground = Brushes.Black,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                };
-                Canvas.SetLeft(valueLabel, x);
-                Canvas.SetTop(valueLabel, y - 20);
-                ChartCanvas.Children.Add(valueLabel);
-                
-                // Add month label
-                var monthLabel = new TextBlock
-                {
-                    Text = item.MonthName,
-                    FontSize = 10,
-                    Foreground = Brushes.Black,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                };
-                Canvas.SetLeft(monthLabel, x);
-                Canvas.SetTop(monthLabel, margin + chartHeight + 5);
-                ChartCanvas.Children.Add(monthLabel);
-            }
-            
-            // Draw line connecting points
-            if (points.Count > 1)
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    var line = new Line
-                    {
-                        X1 = points[i].X,
-                        Y1 = points[i].Y,
-                        X2 = points[i + 1].X,
-                        Y2 = points[i + 1].Y,
-                        Stroke = new SolidColorBrush(Color.FromRgb(255, 99, 132)),
-                        StrokeThickness = 3
-                    };
-                    ChartCanvas.Children.Add(line);
-                }
-            }
+                Title = "Revenue Trend",
+                Values = new ChartValues<double>(revenueValues),
+                Stroke = System.Windows.Media.Brushes.Red,
+                StrokeThickness = 3,
+                PointGeometry = DefaultGeometries.Circle,
+                PointGeometrySize = 6,
+                DataLabels = false // Disable data labels to prevent overlap
+            });
         }
         
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             base.OnRenderSizeChanged(sizeInfo);
-            DrawChart();
+            UpdateChart();
         }
         
         public void ForceRedraw()
         {
             System.Diagnostics.Debug.WriteLine("MonthlyRevenueChart: Force redraw requested");
-            DrawChart();
+            UpdateChart();
         }
     }
 }

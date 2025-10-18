@@ -19,7 +19,12 @@ namespace StudentNameWPF.Services
     {
         public Task<string> ExportToPDFAsync(List<Booking> bookings, List<Customer> customers, List<RoomInformation> rooms, string reportType, string? customFilePath = null)
         {
-            var tempPath = "";
+            System.Diagnostics.Debug.WriteLine($"PDFExportService: Starting PDF export");
+            System.Diagnostics.Debug.WriteLine($"PDFExportService: Bookings: {bookings?.Count ?? 0}, Customers: {customers?.Count ?? 0}, Rooms: {rooms?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"PDFExportService: Report type: {reportType}");
+            System.Diagnostics.Debug.WriteLine($"PDFExportService: Custom file path: {customFilePath}");
+            
+            var tempFile = "";
             try
             {
                 var filePath = customFilePath ?? Path.Combine("Reports", $"HotelReport_{reportType}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
@@ -35,26 +40,42 @@ namespace StudentNameWPF.Services
                     File.Delete(filePath);
                 }
 
-                // Create PDF document with proper error handling
-                // Use a temporary file first to avoid permission issues
-                tempPath = Path.GetTempFileName();
-                using var writer = new PdfWriter(tempPath);
+                // Create PDF document using direct file approach with better error handling
+                System.Diagnostics.Debug.WriteLine("PDFExportService: Creating PDF directly to file...");
+                
+                // Create a temporary file in the same directory to avoid permission issues
+                tempFile = Path.Combine(directory ?? Path.GetTempPath(), $"temp_{Guid.NewGuid()}.pdf");
+                System.Diagnostics.Debug.WriteLine($"PDFExportService: Using temp file: {tempFile}");
+                
+                // Try the simplest approach - direct file creation
+                System.Diagnostics.Debug.WriteLine("PDFExportService: Attempting direct PDF creation...");
+                
+                using var writer = new PdfWriter(tempFile);
+                System.Diagnostics.Debug.WriteLine("PDFExportService: Created PdfWriter");
+                
                 using var pdf = new PdfDocument(writer);
+                System.Diagnostics.Debug.WriteLine("PDFExportService: Created PdfDocument");
+                
                 using var document = new Document(pdf);
+                System.Diagnostics.Debug.WriteLine("PDFExportService: Created Document");
 
             // Set up fonts
+            System.Diagnostics.Debug.WriteLine("PDFExportService: Creating fonts...");
             var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             var titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
             var smallFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            System.Diagnostics.Debug.WriteLine("PDFExportService: Fonts created successfully");
             
             // Header
+            System.Diagnostics.Debug.WriteLine("PDFExportService: Creating header...");
             var header = new Paragraph("🏨 FUMiniHotel Management System")
                 .SetFont(headerFont)
                 .SetFontSize(20)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetMarginBottom(10);
             document.Add(header);
+            System.Diagnostics.Debug.WriteLine("PDFExportService: Header added");
 
             var subtitle = new Paragraph("Comprehensive Business Report")
                 .SetFont(titleFont)
@@ -72,10 +93,13 @@ namespace StudentNameWPF.Services
                 .SetFont(normalFont)
                 .SetFontSize(10)
                 .SetMarginBottom(5));
-            document.Add(new Paragraph($"Report Period: {bookings.Min(b => b.CheckInDate):yyyy-MM-dd} to {bookings.Max(b => b.CheckInDate):yyyy-MM-dd}")
-                .SetFont(normalFont)
-                .SetFontSize(10)
-                .SetMarginBottom(20));
+            if (bookings?.Any() == true)
+            {
+                document.Add(new Paragraph($"Report Period: {bookings.Min(b => b.CheckInDate):yyyy-MM-dd} to {bookings.Max(b => b.CheckInDate):yyyy-MM-dd}")
+                    .SetFont(normalFont)
+                    .SetFontSize(10)
+                    .SetMarginBottom(20));
+            }
             
             // Executive Summary
             var summaryTitle = new Paragraph("📊 Executive Summary")
@@ -86,22 +110,23 @@ namespace StudentNameWPF.Services
 
             var summaryTable = new Table(2).UseAllAvailableWidth();
             summaryTable.AddCell(new Cell().Add(new Paragraph("Total Revenue").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"${bookings.Sum(b => b.TotalAmount):N2}").SetFont(normalFont)));
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"${bookings?.Sum(b => b.TotalAmount) ?? 0:0}").SetFont(normalFont)));
 
             summaryTable.AddCell(new Cell().Add(new Paragraph("Total Bookings").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"{bookings.Count:N0}").SetFont(normalFont)));
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"{bookings?.Count ?? 0:N0}").SetFont(normalFont)));
 
             summaryTable.AddCell(new Cell().Add(new Paragraph("Average Booking Value").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"${bookings.Average(b => b.TotalAmount):N2}").SetFont(normalFont)));
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"${bookings?.Average(b => b.TotalAmount) ?? 0:0}").SetFont(normalFont)));
 
             summaryTable.AddCell(new Cell().Add(new Paragraph("Total Customers").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"{customers.Count:N0}").SetFont(normalFont)));
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"{customers?.Count ?? 0:N0}").SetFont(normalFont)));
 
             summaryTable.AddCell(new Cell().Add(new Paragraph("Total Rooms").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"{rooms.Count:N0}").SetFont(normalFont)));
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"{rooms?.Count ?? 0:N0}").SetFont(normalFont)));
 
             summaryTable.AddCell(new Cell().Add(new Paragraph("Average Occupancy Rate").SetFont(titleFont)).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
-            summaryTable.AddCell(new Cell().Add(new Paragraph($"{(double)bookings.Count / rooms.Count * 100:F1}%").SetFont(normalFont)));
+            var occupancyRate = CalculateOccupancyRate(bookings ?? new List<Booking>(), rooms ?? new List<RoomInformation>());
+            summaryTable.AddCell(new Cell().Add(new Paragraph($"{occupancyRate:F1}%").SetFont(normalFont)));
 
             document.Add(summaryTable);
             
@@ -112,7 +137,7 @@ namespace StudentNameWPF.Services
                 .SetMarginTop(20)
                 .SetMarginBottom(10));
             
-            var monthlyRevenue = bookings
+            var monthlyRevenue = (bookings ?? new List<Booking>())
                 .GroupBy(b => new { b.CheckInDate.Year, b.CheckInDate.Month })
                 .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
                 .Select(g => new { 
@@ -132,9 +157,9 @@ namespace StudentNameWPF.Services
             {
                 var avgPerBooking = month.Revenue / month.Bookings;
                 revenueTable.AddCell(new Cell().Add(new Paragraph(month.Month).SetFont(normalFont)));
-                revenueTable.AddCell(new Cell().Add(new Paragraph($"${month.Revenue:N2}").SetFont(normalFont)));
+                revenueTable.AddCell(new Cell().Add(new Paragraph($"${month.Revenue:0}").SetFont(normalFont)));
                 revenueTable.AddCell(new Cell().Add(new Paragraph(month.Bookings.ToString()).SetFont(normalFont)));
-                revenueTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:N2}").SetFont(normalFont)));
+                revenueTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:0}").SetFont(normalFont)));
             }
             
             document.Add(revenueTable);
@@ -146,11 +171,11 @@ namespace StudentNameWPF.Services
                 .SetMarginTop(20)
                 .SetMarginBottom(10));
 
-            var topCustomers = bookings
+            var topCustomers = (bookings ?? new List<Booking>())
                 .GroupBy(b => b.CustomerID)
                 .Select(g => new { 
                     CustomerID = g.Key, 
-                    CustomerName = customers.FirstOrDefault(c => c.CustomerID == g.Key)?.CustomerFullName ?? "Unknown",
+                    CustomerName = (customers ?? new List<Customer>()).FirstOrDefault(c => c.CustomerID == g.Key)?.CustomerFullName ?? "Unknown",
                     TotalSpent = g.Sum(b => b.TotalAmount),
                     BookingCount = g.Count()
                 })
@@ -167,9 +192,9 @@ namespace StudentNameWPF.Services
             {
                 var avgPerBooking = customer.TotalSpent / customer.BookingCount;
                 customerTable.AddCell(new Cell().Add(new Paragraph(customer.CustomerName).SetFont(normalFont)));
-                customerTable.AddCell(new Cell().Add(new Paragraph($"${customer.TotalSpent:N2}").SetFont(normalFont)));
+                customerTable.AddCell(new Cell().Add(new Paragraph($"${customer.TotalSpent:0}").SetFont(normalFont)));
                 customerTable.AddCell(new Cell().Add(new Paragraph(customer.BookingCount.ToString()).SetFont(normalFont)));
-                customerTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:N2}").SetFont(normalFont)));
+                customerTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:0}").SetFont(normalFont)));
             }
 
             document.Add(customerTable);
@@ -181,11 +206,11 @@ namespace StudentNameWPF.Services
                 .SetMarginTop(20)
                 .SetMarginBottom(10));
 
-            var topRooms = bookings
+            var topRooms = (bookings ?? new List<Booking>())
                 .GroupBy(b => b.RoomID)
                 .Select(g => new {
                     RoomID = g.Key,
-                    RoomNumber = rooms.FirstOrDefault(r => r.RoomID == g.Key)?.RoomNumber ?? "Unknown",
+                    RoomNumber = (rooms ?? new List<RoomInformation>()).FirstOrDefault(r => r.RoomID == g.Key)?.RoomNumber ?? "Unknown",
                     Revenue = g.Sum(b => b.TotalAmount),
                     BookingCount = g.Count()
                 })
@@ -202,9 +227,9 @@ namespace StudentNameWPF.Services
             {
                 var avgPerBooking = room.Revenue / room.BookingCount;
                 roomTable.AddCell(new Cell().Add(new Paragraph(room.RoomNumber).SetFont(normalFont)));
-                roomTable.AddCell(new Cell().Add(new Paragraph($"${room.Revenue:N2}").SetFont(normalFont)));
+                roomTable.AddCell(new Cell().Add(new Paragraph($"${room.Revenue:0}").SetFont(normalFont)));
                 roomTable.AddCell(new Cell().Add(new Paragraph(room.BookingCount.ToString()).SetFont(normalFont)));
-                roomTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:N2}").SetFont(normalFont)));
+                roomTable.AddCell(new Cell().Add(new Paragraph($"${avgPerBooking:0}").SetFont(normalFont)));
             }
 
             document.Add(roomTable);
@@ -221,17 +246,26 @@ namespace StudentNameWPF.Services
                 .SetTextAlignment(TextAlignment.CENTER));
 
                 // Move the temporary file to the final location
-                File.Move(tempPath, filePath);
+                System.Diagnostics.Debug.WriteLine($"PDFExportService: Moving temp file to final location: {filePath}");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                File.Move(tempFile, filePath);
+                System.Diagnostics.Debug.WriteLine("PDFExportService: PDF export completed successfully");
                 return Task.FromResult(filePath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"PDFExportService: PDF creation failed - {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"PDFExportService: Stack trace - {ex.StackTrace}");
+                
                 // Clean up temp file if it exists
                 try
                 {
-                    if (File.Exists(tempPath))
+                    if (File.Exists(tempFile))
                     {
-                        File.Delete(tempPath);
+                        File.Delete(tempFile);
                     }
                 }
                 catch { }
@@ -245,9 +279,10 @@ namespace StudentNameWPF.Services
                 }
 
                 // Create HTML content as fallback
-                var html = CreateHTMLContent(bookings, customers, rooms, reportType);
+                var html = CreateHTMLContent(bookings ?? new List<Booking>(), customers ?? new List<Customer>(), rooms ?? new List<RoomInformation>(), reportType);
                 File.WriteAllText(fallbackPath, html);
                 
+                System.Diagnostics.Debug.WriteLine($"PDFExportService: Fallback to HTML export - {fallbackPath}");
                 return Task.FromResult(fallbackPath);
             }
         }
@@ -280,9 +315,9 @@ namespace StudentNameWPF.Services
             // Executive Summary
             html.AppendLine("<div class='summary'>");
             html.AppendLine("<h2>📊 Executive Summary</h2>");
-            html.AppendLine($"<p><strong>Total Revenue:</strong> ${bookings.Sum(b => b.TotalAmount):N2}</p>");
+            html.AppendLine($"<p><strong>Total Revenue:</strong> ${bookings.Sum(b => b.TotalAmount):0}</p>");
             html.AppendLine($"<p><strong>Total Bookings:</strong> {bookings.Count:N0}</p>");
-            html.AppendLine($"<p><strong>Average Booking Value:</strong> ${bookings.Average(b => b.TotalAmount):N2}</p>");
+            html.AppendLine($"<p><strong>Average Booking Value:</strong> ${bookings.Average(b => b.TotalAmount):0}</p>");
             html.AppendLine($"<p><strong>Total Customers:</strong> {customers.Count:N0}</p>");
             html.AppendLine($"<p><strong>Total Rooms:</strong> {rooms.Count:N0}</p>");
             html.AppendLine("</div>");
@@ -299,6 +334,19 @@ namespace StudentNameWPF.Services
             if (month >= 6 && month <= 8) return "Summer";
             if (month >= 9 && month <= 11) return "Autumn";
             return "Winter";
+        }
+        
+        private double CalculateOccupancyRate(List<Booking> bookings, List<RoomInformation> rooms)
+        {
+            if (!rooms.Any()) return 0;
+            
+            var currentDate = DateTime.Now;
+            var occupiedRooms = bookings.Count(b => 
+                b.CheckInDate <= currentDate && 
+                b.CheckOutDate >= currentDate && 
+                b.BookingStatus == 1);
+            
+            return (double)occupiedRooms / rooms.Count * 100;
         }
     }
 }
