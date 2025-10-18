@@ -26,6 +26,6 @@ namespace FUMiniHotelSystem.Models
         
         // Navigation properties
         public Customer? Customer { get; set; }
-        public RoomInformation? Room { get; set; }
+        public RoomInformation? RoomInformation { get; set; }
     }
 }

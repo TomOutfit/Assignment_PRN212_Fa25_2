@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="FUMiniHotelSystem - Login" 
         Height="800" 
-        Width="1000"
+        Width="1350"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="White">
@@ -14,7 +14,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
-        <!-- Left Section - Branding Area -->
+        <!-- Left Section - Motivational Area -->
         <Grid Grid.Column="0">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -23,239 +23,263 @@
                 </LinearGradientBrush>
             </Grid.Background>
             
-            <!-- Background Pattern -->
-            <Canvas>
-                <!-- Abstract curved shapes -->
-                <Path Fill="#BBDEFB" Opacity="0.3">
-                    <Path.Data>
-                        <PathGeometry>
-                            <PathFigure StartPoint="50,100">
-                                <QuadraticBezierSegment Point1="200,50" Point2="300,150"/>
-                                <QuadraticBezierSegment Point1="150,200" Point2="50,100"/>
-                            </PathFigure>
-                        </PathGeometry>
-                    </Path.Data>
-                </Path>
-                <Path Fill="#C5CAE9" Opacity="0.2">
-                    <Path.Data>
-                        <PathGeometry>
-                            <PathFigure StartPoint="200,50">
-                                <QuadraticBezierSegment Point1="400,100" Point2="350,300"/>
-                                <QuadraticBezierSegment Point1="250,250" Point2="200,50"/>
-                            </PathFigure>
-                        </PathGeometry>
-                    </Path.Data>
-                </Path>
-            </Canvas>
-            
-            <!-- Frosted Glass Box -->
-            <Border Background="White" 
-                    Opacity="0.9" 
-                    CornerRadius="20" 
-                    Margin="80,120,80,120"
-                    Effect="{StaticResource DropShadowEffect}">
-                <StackPanel Margin="40,50">
-                    <TextBlock Text="► Welcome to" 
-                               FontSize="32" 
-                               FontWeight="Bold" 
-                               Foreground="White" 
-                               Margin="0,0,0,5"/>
-                    <TextBlock Text="FUMiniHotel" 
-                               FontSize="32" 
-                               FontWeight="Bold" 
-                               Foreground="White" 
-                               Margin="0,0,0,5"/>
-                    <TextBlock Text="Management" 
-                               FontSize="32" 
-                               FontWeight="Bold" 
-                               Foreground="White" 
-                               Margin="0,0,0,5"/>
-                    <TextBlock Text="System." 
-                               FontSize="32" 
-                               FontWeight="Bold" 
-                               Foreground="White" 
-                               Margin="0,0,0,30"/>
-                    
-                    <TextBlock Text="Streamline your hotel operations." 
-                               FontSize="16" 
-                               Foreground="White" 
-                               Opacity="0.8" 
-                               Margin="0,0,0,5"/>
-                    <TextBlock Text="Manage with ease and efficiency." 
-                               FontSize="16" 
-                               Foreground="White" 
-                               Opacity="0.8"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-        
-        <!-- Right Section - Login Form -->
-        <Grid Grid.Column="1" Background="White">
-            <StackPanel Margin="60,80,60,80" VerticalAlignment="Center">
-                <!-- Logo -->
-                <Border Width="50" Height="50" 
-                        Background="#667eea" 
-                        CornerRadius="25" 
-                        Margin="0,0,0,30"
-                        HorizontalAlignment="Left">
-                    <TextBlock Text="🏨" 
-                               FontSize="24" 
-                               HorizontalAlignment="Center" 
-                               VerticalAlignment="Center"/>
-                </Border>
-                
-                <!-- Greeting -->
-                <TextBlock Text="Hey, hello 👋" 
-                           FontSize="28" 
+            <!-- Main Content -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="60">
+                <TextBlock Text="Fast, Efficient and Productive" 
+                           FontSize="36" 
                            FontWeight="Bold" 
-                           Foreground="#333333" 
-                           Margin="0,0,0,10"/>
+                           Foreground="#2C3E50" 
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,20"/>
                 
-                <TextBlock Text="Enter your credentials to access the system." 
-                           FontSize="14" 
-                           Foreground="#666666" 
-                           Margin="0,0,0,40"/>
+                <TextBlock Text="Streamline your hotel operations with our comprehensive management system. Manage bookings, customers, and rooms with ease and efficiency." 
+                           FontSize="16" 
+                           Foreground="#5A6C7D" 
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           LineHeight="24"
+                           TextAlignment="Center"/>
+            </StackPanel>
+            
+            <!-- Footer -->
+            <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="40,0,0,40">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                    <TextBlock Text="🇺🇸" FontSize="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="English" FontSize="14" Foreground="#5A6C7D" Margin="0,0,8,0"/>
+                    <TextBlock Text="▼" FontSize="10" Foreground="#5A6C7D"/>
+                </StackPanel>
                 
-                <!-- Email Input -->
-                <TextBlock Text="Email" 
-                           FontSize="14" 
-                           FontWeight="SemiBold" 
-                           Margin="0,0,0,8"
-                           Foreground="#333333"/>
-                
-                <TextBox x:Name="EmailTextBox"
-                         Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                         FontSize="16" 
-                         Padding="15,12" 
-                         BorderBrush="#E0E0E0" 
-                         BorderThickness="1" 
-                         Margin="0,0,0,20"
-                         Background="White">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="BorderBrush" Value="#E0E0E0"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsFocused" Value="True">
-                                    <Setter Property="BorderBrush" Value="#667eea"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
-                
-                <!-- Password Input -->
-                <TextBlock Text="Password" 
-                           FontSize="14" 
-                           FontWeight="SemiBold" 
-                           Margin="0,0,0,8"
-                           Foreground="#333333"/>
-                
-                <PasswordBox x:Name="PasswordBox"
-                             FontSize="16" 
-                             Padding="15,12" 
-                             BorderBrush="#E0E0E0" 
-                             BorderThickness="1" 
-                             Margin="0,0,0,20"
-                             Background="White"
-                             PasswordChanged="PasswordBox_PasswordChanged">
-                    <PasswordBox.Style>
-                        <Style TargetType="PasswordBox">
-                            <Setter Property="BorderBrush" Value="#E0E0E0"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsFocused" Value="True">
-                                    <Setter Property="BorderBrush" Value="#667eea"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </PasswordBox.Style>
-                </PasswordBox>
-                
-                <!-- Remember me and Forgot password -->
-                <Grid Margin="0,0,0,30">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <CheckBox Grid.Column="0" 
-                              Content="Remember me" 
-                              FontSize="14" 
-                              Foreground="#666666"
-                              IsChecked="True"/>
-                    
-                    <TextBlock Grid.Column="1" 
-                               Text="Forgot password?" 
-                               FontSize="14" 
-                               Foreground="#667eea" 
-                               Cursor="Hand"
-                               VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Terms" FontSize="14" Foreground="#3498DB" Margin="0,0,20,0" Cursor="Hand">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Foreground" Value="#5a6fd8"/>
+                                        <Setter Property="Foreground" Value="#2980B9"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                </Grid>
-                
-                <!-- Error Message -->
-                <TextBlock Text="{Binding ErrorMessage}" 
-                           Foreground="Red" 
-                           FontSize="12" 
-                           HorizontalAlignment="Center" 
-                           Margin="0,0,0,20"
-                           TextWrapping="Wrap"/>
-                
-                <!-- Login Button -->
-                <Button Content="Login" 
-                        Command="{Binding LoginCommand}"
-                        FontSize="16" 
-                        FontWeight="SemiBold" 
-                        Padding="20,15" 
-                        Foreground="White" 
-                        BorderThickness="0" 
-                        Margin="0,0,0,20"
-                        Cursor="Hand"
-                        HorizontalAlignment="Stretch">
-                    <Button.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="#667eea" Offset="0"/>
-                            <GradientStop Color="#764ba2" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Button.Background>
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Opacity" Value="0.9"/>
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                
-                
-                <!-- Loading Indicator -->
-                <StackPanel Orientation="Horizontal" 
-                            HorizontalAlignment="Center" 
-                            Margin="0,30,0,0"
-                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Ellipse Width="10" Height="10" Fill="#667eea" Margin="0,0,5,0">
-                        <Ellipse.RenderTransform>
-                            <RotateTransform x:Name="LoadingRotation"/>
-                        </Ellipse.RenderTransform>
-                    </Ellipse>
-                    <TextBlock Text="Logging in..." 
-                               Foreground="#666666" 
-                               FontSize="12"/>
+                    <TextBlock Text="Plans" FontSize="14" Foreground="#3498DB" Margin="0,0,20,0" Cursor="Hand">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#2980B9"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="Contact Us" FontSize="14" Foreground="#3498DB" Cursor="Hand">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#2980B9"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
             </StackPanel>
+        </Grid>
+        
+        <!-- Right Section - Login Form -->
+        <Grid Grid.Column="1" Background="White">
+            <Border Background="White" 
+                    CornerRadius="12" 
+                    Margin="40"
+                    Effect="{StaticResource DropShadowEffect}">
+                <StackPanel Margin="60,50,60,50" VerticalAlignment="Center">
+                    <!-- Header -->
+                    <TextBlock Text="Sign In" 
+                               FontSize="32" 
+                               FontWeight="Bold" 
+                               Foreground="#2C3E50" 
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="Hotel Management System" 
+                               FontSize="16" 
+                               Foreground="#7F8C8D" 
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,40"/>
+                    
+                    <!-- Email Input -->
+                    <TextBlock Text="Email" 
+                               FontSize="14" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"
+                               Foreground="#2C3E50"/>
+                    
+                    <TextBox x:Name="EmailTextBox"
+                             Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="16" 
+                             Padding="15,12" 
+                             BorderBrush="#BDC3C7" 
+                             BorderThickness="1" 
+                             Margin="0,0,0,20"
+                             Background="White">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="BorderBrush" Value="#BDC3C7"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                                    CornerRadius="6">
+                                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#3498DB"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    
+                    <!-- Password Input -->
+                    <TextBlock Text="Password" 
+                               FontSize="14" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"
+                               Foreground="#2C3E50"/>
+                    
+                    <PasswordBox x:Name="PasswordBox"
+                                 FontSize="16" 
+                                 Padding="15,12" 
+                                 BorderBrush="#BDC3C7" 
+                                 BorderThickness="1" 
+                                 Margin="0,0,0,20"
+                                 Background="White"
+                                 PasswordChanged="PasswordBox_PasswordChanged">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox">
+                                <Setter Property="BorderBrush" Value="#BDC3C7"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="PasswordBox">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                                    CornerRadius="6">
+                                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#3498DB"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+                    
+                    <!-- Remember me and Forgot password -->
+                    <Grid Margin="0,0,0,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <CheckBox Grid.Column="0" 
+                                  Content="Remember me" 
+                                  FontSize="14" 
+                                  Foreground="#5A6C7D"
+                                  IsChecked="True"/>
+                        
+                        <TextBlock Grid.Column="1" 
+                                   Text="Forgot password?" 
+                                   FontSize="14" 
+                                   Foreground="#3498DB" 
+                                   Cursor="Hand"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#2980B9"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    
+                    <!-- Error Message -->
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                               Foreground="#E74C3C" 
+                               FontSize="12" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,0,0,20"
+                               TextWrapping="Wrap"/>
+                    
+                    <!-- Login Button -->
+                    <Button Content="Sign In" 
+                            Command="{Binding LoginCommand}"
+                            FontSize="16" 
+                            FontWeight="SemiBold" 
+                            Padding="20,15" 
+                            Foreground="White" 
+                            BorderThickness="0" 
+                            Margin="0,0,0,30"
+                            Cursor="Hand"
+                            HorizontalAlignment="Stretch"
+                            Background="#3498DB">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#3498DB"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    CornerRadius="6" 
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#2980B9"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#21618C"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    <!-- Loading Indicator -->
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center" 
+                                Margin="0,20,0,0"
+                                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Ellipse Width="8" Height="8" Fill="#3498DB" Margin="0,0,8,0">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="LoadingRotation"/>
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+                        <TextBlock Text="Signing in..." 
+                                   Foreground="#7F8C8D" 
+                                   FontSize="14"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

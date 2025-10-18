@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:charts="clr-namespace:StudentNameWPF.Views.Charts"
         Title="FUMiniHotel System - Realtime Dashboard" 
-        Height="800" 
-        Width="1400"
+        Height="750" 
+        Width="1250"
         WindowStartupLocation="CenterScreen"
         Background="#F8FAFC"
         FontFamily="Segoe UI">
@@ -22,7 +22,7 @@
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Effect" Value="{StaticResource ModernDropShadow}"/>
-            <Setter Property="Padding" Value="24"/>
+            <Setter Property="Padding" Value="16"/>
         </Style>
         
         <!-- Metric Card Style -->
@@ -72,7 +72,7 @@
                             Padding="16,10" 
                             Margin="0,0,12,0"
                             FontWeight="Medium"
-                            BorderThickness="0">
+                            BorderThickness="0" Width="82">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Background" Value="#EF4444"/>
@@ -159,7 +159,7 @@
         </Border>
         
         <!-- Main Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -168,7 +168,7 @@
                 </Grid.RowDefinitions>
                 
                 <!-- Key Metrics Cards -->
-                <Grid Grid.Row="0" Margin="0,0,0,24">
+                <Grid Grid.Row="0" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -236,7 +236,7 @@
                     <Border Grid.Column="3" Style="{StaticResource MetricCardStyle}">
                         <StackPanel>
                             <TextBlock Text="💰" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="{Binding TotalRevenue, StringFormat=C}" 
+                            <TextBlock Text="{Binding TotalRevenue, StringFormat='${0:0}'}" 
                                        FontSize="24" 
                                        FontWeight="Bold" 
                                        HorizontalAlignment="Center" 
@@ -254,7 +254,7 @@
                     <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}">
                         <StackPanel>
                             <TextBlock Text="💲" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="{Binding AverageBookingValue, StringFormat=C}" 
+                            <TextBlock Text="{Binding AverageBookingValue, StringFormat='${0:0}'}" 
                                        FontSize="24" 
                                        FontWeight="Bold" 
                                        HorizontalAlignment="Center" 
@@ -288,13 +288,13 @@
                 </Grid>
                 
                 <!-- Charts Section -->
-                <Grid Grid.Row="1" Margin="0,0,0,24">
+                <Grid Grid.Row="1" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="350"/>
+                        <RowDefinition Height="250"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Monthly Revenue Chart -->
@@ -305,7 +305,7 @@
                                        FontWeight="SemiBold" 
                                        Foreground="#1E293B"
                                        Margin="0,0,0,16"/>
-                            <charts:MonthlyRevenueChart x:Name="MonthlyRevenueChart" Height="280"/>
+                            <charts:MonthlyRevenueChart x:Name="MonthlyRevenueChart" Height="190"/>
                         </StackPanel>
                     </Border>
                     
@@ -317,7 +317,7 @@
                                        FontWeight="SemiBold" 
                                        Foreground="#1E293B"
                                        Margin="0,0,0,16"/>
-                            <charts:CustomerDistributionChart x:Name="CustomerDistributionChart" Height="280"/>
+                            <charts:CustomerDistributionChart x:Name="CustomerDistributionChart" Height="190"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -365,7 +365,7 @@
                                                     Binding="{Binding CheckInDate, StringFormat=yyyy-MM-dd}" 
                                                     Width="120"/>
                                 <DataGridTextColumn Header="Amount" 
-                                                    Binding="{Binding TotalAmount, StringFormat=C}" 
+                                                    Binding="{Binding TotalAmount, StringFormat='${0:0}'}" 
                                                     Width="120"/>
                             </DataGrid.Columns>
                         </DataGrid>

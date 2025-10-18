@@ -2,7 +2,6 @@ using FUMiniHotelSystem.BusinessLogic;
 using FUMiniHotelSystem.DataAccess;
 using FUMiniHotelSystem.Models;
 using Microsoft.Extensions.Configuration;
-using StudentNameWPF.Services;
 using System.Windows;
 
 namespace StudentNameWPF.ViewModels
@@ -50,14 +49,28 @@ namespace StudentNameWPF.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine("LoginViewModel constructor called");
                 
-                // Initialize services using service container
-                System.Diagnostics.Debug.WriteLine("Initializing service container...");
-                ServiceContainer.Initialize();
-                System.Diagnostics.Debug.WriteLine("Service container initialized successfully");
+                // Initialize services
+                System.Diagnostics.Debug.WriteLine("Initializing configuration...");
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .Build();
+                System.Diagnostics.Debug.WriteLine("Configuration loaded successfully");
 
-                System.Diagnostics.Debug.WriteLine("Getting AuthenticationService from container...");
-                _authService = ServiceContainer.GetService<AuthenticationService>();
-                System.Diagnostics.Debug.WriteLine("AuthenticationService retrieved successfully");
+                var appSettings = new AppSettings
+                {
+                    AdminEmail = configuration["AdminEmail"] ?? "admin@FUMiniHotelSystem.com",
+                    AdminPassword = configuration["AdminPassword"] ?? "@@abc123@@"
+                };
+                System.Diagnostics.Debug.WriteLine($"AppSettings created - AdminEmail: {appSettings.AdminEmail}");
+
+                System.Diagnostics.Debug.WriteLine("Creating CustomerRepository...");
+                var customerRepository = new CustomerRepository();
+                System.Diagnostics.Debug.WriteLine("CustomerRepository created successfully");
+                
+                System.Diagnostics.Debug.WriteLine("Creating AuthenticationService...");
+                _authService = new AuthenticationService(customerRepository, appSettings);
+                System.Diagnostics.Debug.WriteLine("AuthenticationService created successfully");
 
                 LoginCommand = new RelayCommand(async () => await LoginAsync(), () => !IsLoading);
                 ClearCommand = new RelayCommand(ClearFields);
@@ -112,9 +125,9 @@ namespace StudentNameWPF.ViewModels
                 var customer = await _authService.AuthenticateAsync(Email, Password);
                 if (customer != null)
                 {
-                    // Debug: Show user info
-                    MessageBox.Show($"Login successful!\nUser: {customer.CustomerFullName}\nEmail: {customer.EmailAddress}\nIsAdmin: {customer.IsAdmin}", 
-                        "Debug Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Welcome message
+                    MessageBox.Show($"Welcome to our Hotel System !\n\nUser: {customer.CustomerFullName}\nEmail: {customer.EmailAddress}\nIsAdmin: {customer.IsAdmin}", 
+                        "Welcome", MessageBoxButton.OK, MessageBoxImage.Information);
                     LoginSuccessful?.Invoke(this, customer);
                 }
                 else

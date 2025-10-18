@@ -7,7 +7,6 @@ using System.IO;
 using FUMiniHotelSystem.Models;
 using FUMiniHotelSystem.DataAccess;
 using System.Text.Json;
-using StudentNameWPF.Services;
 
 namespace StudentNameWPF.Services
 {
@@ -26,11 +25,11 @@ namespace StudentNameWPF.Services
         
         public RealtimeDataService()
         {
-            _customerRepository = ServiceContainer.GetService<CustomerRepository>();
-            _bookingRepository = ServiceContainer.GetService<BookingRepository>();
-            _roomRepository = ServiceContainer.GetService<RoomRepository>();
-            _roomTypeRepository = ServiceContainer.GetService<RoomTypeRepository>();
-            _chartExportService = ServiceContainer.GetService<ChartExportService>();
+            _customerRepository = new CustomerRepository();
+            _bookingRepository = new BookingRepository();
+            _roomRepository = new RoomRepository();
+            _roomTypeRepository = new RoomTypeRepository();
+            _chartExportService = new ChartExportService();
         }
         
         public void StartRealtimeUpdates(int intervalSeconds = 30)
@@ -63,6 +62,12 @@ namespace StudentNameWPF.Services
             await UpdateDataAsync();
         }
         
+        public async Task ForceUpdateAsync()
+        {
+            System.Diagnostics.Debug.WriteLine("RealtimeDataService: Force update requested");
+            await UpdateDataAsync();
+        }
+        
         private async Task UpdateDataAsync()
         {
             try
@@ -76,14 +81,24 @@ namespace StudentNameWPF.Services
                 
                 System.Diagnostics.Debug.WriteLine($"RealtimeDataService: Loaded {customers.Count} customers, {bookings.Count} bookings, {rooms.Count} rooms");
                 
+                var totalRevenue = bookings.Sum(b => b.TotalAmount);
+                var averageBookingValue = bookings.Any() ? bookings.Average(b => b.TotalAmount) : 0;
+                
+                System.Diagnostics.Debug.WriteLine($"RealtimeDataService: Data Summary:");
+                System.Diagnostics.Debug.WriteLine($"  - Customers: {customers.Count}");
+                System.Diagnostics.Debug.WriteLine($"  - Bookings: {bookings.Count}");
+                System.Diagnostics.Debug.WriteLine($"  - Rooms: {rooms.Count}");
+                System.Diagnostics.Debug.WriteLine($"  - Total Revenue: ${totalRevenue:0}");
+                System.Diagnostics.Debug.WriteLine($"  - Average Booking Value: ${averageBookingValue:0}");
+                
                 var realtimeData = new RealtimeData
                 {
                     Timestamp = DateTime.Now,
                     TotalCustomers = customers.Count,
                     TotalBookings = bookings.Count,
                     TotalRooms = rooms.Count,
-                    TotalRevenue = bookings.Sum(b => b.TotalAmount),
-                    AverageBookingValue = bookings.Any() ? bookings.Average(b => b.TotalAmount) : 0,
+                    TotalRevenue = totalRevenue,
+                    AverageBookingValue = averageBookingValue,
                     OccupancyRate = CalculateOccupancyRate(bookings, rooms),
                     RecentBookings = bookings
                         .OrderByDescending(b => b.CheckInDate)
@@ -127,7 +142,26 @@ namespace StudentNameWPF.Services
                 b.CheckOutDate >= currentDate && 
                 b.BookingStatus == 1);
             
-            return (double)occupiedRooms / rooms.Count * 100;
+            var occupancyRate = (double)occupiedRooms / rooms.Count * 100;
+            
+            System.Diagnostics.Debug.WriteLine($"CalculateOccupancyRate: Current Date: {currentDate:yyyy-MM-dd HH:mm:ss}");
+            System.Diagnostics.Debug.WriteLine($"CalculateOccupancyRate: Total Rooms: {rooms.Count}");
+            System.Diagnostics.Debug.WriteLine($"CalculateOccupancyRate: Total Bookings: {bookings.Count}");
+            System.Diagnostics.Debug.WriteLine($"CalculateOccupancyRate: Occupied Rooms: {occupiedRooms}");
+            System.Diagnostics.Debug.WriteLine($"CalculateOccupancyRate: Occupancy Rate: {occupancyRate:F1}%");
+            
+            // Debug: Show active bookings
+            var activeBookings = bookings.Where(b => 
+                b.CheckInDate <= currentDate && 
+                b.CheckOutDate >= currentDate && 
+                b.BookingStatus == 1).ToList();
+                
+            foreach (var booking in activeBookings)
+            {
+                System.Diagnostics.Debug.WriteLine($"  Active Booking {booking.BookingID}: Room {booking.RoomID}, {booking.CheckInDate:yyyy-MM-dd} to {booking.CheckOutDate:yyyy-MM-dd}");
+            }
+            
+            return occupancyRate;
         }
         
         private List<MonthlyRevenueData> GetMonthlyRevenue(List<Booking> bookings)
