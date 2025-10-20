@@ -1,0 +1,262 @@
+<Window x:Class="StudentNameWPF.Views.BookingDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Booking Management" 
+        Height="600" 
+        Width="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC"
+        ResizeMode="CanResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="🏨 Booking Management" FontSize="24" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="DialogTitle" Text="Create New Booking" FontSize="16" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Customer Information -->
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="👤 Customer Information" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15" Foreground="#1F2937"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Customer Name" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#374151"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="CustomerNameText" Text="{Binding CurrentCustomer.CustomerFullName}" FontSize="14" Foreground="#1F2937" Margin="0,0,10,0"/>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Email" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#374151"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CustomerEmailText" Text="{Binding CurrentCustomer.EmailAddress}" FontSize="14" Foreground="#1F2937"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Room Selection -->
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="🏨 Room Selection" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15" Foreground="#1F2937"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <ComboBox Grid.Column="0" 
+                                      x:Name="RoomComboBox"
+                                      ItemsSource="{Binding AvailableRooms}"
+                                      SelectedItem="{Binding SelectedRoom}"
+                                      DisplayMemberPath="RoomNumber"
+                                      SelectedValuePath="RoomID"
+                                      Padding="10" 
+                                      BorderBrush="#CCCCCC" 
+                                      BorderThickness="1" 
+                                      Background="White"
+                                      Margin="0,0,10,0"/>
+                            
+                            <Button Grid.Column="1" 
+                                    Content="🔍 Search Rooms" 
+                                    Padding="12,8" 
+                                    Background="#3B82F6" 
+                                    Foreground="White" 
+                                    BorderThickness="0" 
+                                    Cursor="Hand"
+                                    FontWeight="SemiBold"
+                                    Command="{Binding SearchRoomsCommand}"
+                                    Click="ViewRoomDetails_Click"/>
+                        </Grid>
+                        
+                        <!-- Room Details -->
+                        <Border x:Name="RoomDetailsPanel" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="15" Margin="0,10,0,0" Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock x:Name="RoomDetailsText" FontSize="14" Foreground="#374151"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Booking Dates -->
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="📅 Booking Dates" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15" Foreground="#1F2937"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Check-in Date" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#374151"/>
+                            <DatePicker Grid.Row="1" Grid.Column="0" 
+                                        x:Name="CheckInDatePicker"
+                                        SelectedDate="{Binding CheckInDate}"
+                                        Padding="12,8" 
+                                        FontSize="14"
+                                        Background="#F9FAFB"
+                                        BorderBrush="#D1D5DB"
+                                        BorderThickness="1"
+                                        Margin="0,0,10,0"/>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Check-out Date" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#374151"/>
+                            <DatePicker Grid.Row="1" Grid.Column="1" 
+                                        x:Name="CheckOutDatePicker"
+                                        SelectedDate="{Binding CheckOutDate}"
+                                        Padding="12,8" 
+                                        FontSize="14"
+                                        Background="#F9FAFB"
+                                        BorderBrush="#D1D5DB"
+                                        BorderThickness="1"/>
+                        </Grid>
+                        
+                        <!-- Duration and Price Calculation -->
+                        <Border Background="#F0F9FF" BorderBrush="#3B82F6" BorderThickness="1" CornerRadius="6" Padding="15" Margin="0,15,0,0">
+                            <StackPanel>
+                                <TextBlock Text="💰 Price Calculation" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="#1E40AF"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Duration (Days)" FontSize="12" Foreground="#6B7280"/>
+                                        <TextBlock x:Name="DurationText" Text="{Binding DurationDays}" FontSize="18" FontWeight="Bold" Foreground="#1F2937"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Price per Day" FontSize="12" Foreground="#6B7280"/>
+                                        <TextBlock x:Name="PricePerDayText" Text="{Binding SelectedRoom.RoomPricePerDate, StringFormat='${0:F2}'}" FontSize="18" FontWeight="Bold" Foreground="#1F2937"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Total Amount" FontSize="12" Foreground="#6B7280"/>
+                                        <TextBlock x:Name="TotalAmountText" Text="{Binding TotalAmount, StringFormat='${0:F2}'}" FontSize="20" FontWeight="Bold" Foreground="#10B981"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Additional Information -->
+                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="📝 Additional Information" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15" Foreground="#1F2937"/>
+                        
+                        <TextBlock Text="Notes (Optional)" FontWeight="SemiBold" Margin="0,0,0,5" Foreground="#374151"/>
+                        <TextBox x:Name="NotesTextBox"
+                                 Text="{Binding Notes}"
+                                 Padding="12,8" 
+                                 FontSize="14"
+                                 Background="#F9FAFB"
+                                 BorderBrush="#D1D5DB"
+                                 BorderThickness="1"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 Height="80"
+                                 VerticalScrollBarVisibility="Auto">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TextBox">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        BorderBrush="{TemplateBinding BorderBrush}" 
+                                                        BorderThickness="{TemplateBinding BorderThickness}" 
+                                                        CornerRadius="6">
+                                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        
+                        <TextBlock Text="Special requests or additional information about your stay" 
+                                   FontSize="12" 
+                                   Foreground="#6B7280" 
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,20,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="⚠️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ValidationMessage" Text="" FontSize="14" Foreground="#EF4444" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Content="Cancel" 
+                        Padding="20,10" 
+                        Background="#6B7280" 
+                        Foreground="White" 
+                        BorderThickness="0" 
+                        Margin="0,0,10,0"
+                        Cursor="Hand"
+                        FontWeight="SemiBold"
+                        Click="CancelButton_Click"/>
+                
+                <Button Grid.Column="2" 
+                        x:Name="SaveButton"
+                        Content="Confirm Booking" 
+                        Padding="20,10" 
+                        Background="#10B981" 
+                        Foreground="White" 
+                        BorderThickness="0" 
+                        Cursor="Hand"
+                        FontWeight="SemiBold"
+                        Command="{Binding ConfirmBookingCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#10B981"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#059669"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Background" Value="#9CA3AF"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
