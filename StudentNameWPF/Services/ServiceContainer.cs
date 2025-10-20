@@ -21,7 +21,7 @@ namespace StudentNameWPF.Services
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            var connectionString = configuration["ConnectionString"] ?? 
+            var connectionString = configuration.GetConnectionString("DefaultConnection") ?? 
                 "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;MultipleActiveResultSets=true";
 
             // Register configuration

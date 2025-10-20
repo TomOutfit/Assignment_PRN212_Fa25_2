@@ -87,5 +87,20 @@ namespace FUMiniHotelSystem.BusinessLogic
             }
             return false;
         }
+
+        public async Task<List<RoomInformation>> GetAvailableRoomsAsync(DateTime checkInDate, DateTime checkOutDate)
+        {
+            var allRooms = await _roomRepository.GetAllAsync();
+            var bookings = await _bookingRepository.GetBookingsByDateRangeAsync(checkInDate, checkOutDate);
+            
+            var bookedRoomIds = bookings
+                .Where(b => b.BookingStatus != 3) // Not cancelled
+                .Select(b => b.RoomID)
+                .ToHashSet();
+
+            return allRooms
+                .Where(room => room.RoomStatus == 1 && !bookedRoomIds.Contains(room.RoomID))
+                .ToList();
+        }
     }
 }

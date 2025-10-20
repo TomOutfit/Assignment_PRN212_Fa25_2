@@ -70,7 +70,7 @@ namespace FUMiniHotelSystem.DataAccess
                       .HasForeignKey(e => e.CustomerID)
                       .OnDelete(DeleteBehavior.Restrict);
                       
-                entity.HasOne(e => e.Room)
+                entity.HasOne(e => e.RoomInformation)
                       .WithMany()
                       .HasForeignKey(e => e.RoomID)
                       .OnDelete(DeleteBehavior.Restrict);

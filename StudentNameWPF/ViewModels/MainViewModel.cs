@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Linq;
 using Microsoft.VisualBasic;
+using System.Threading.Tasks;
 
 namespace StudentNameWPF.ViewModels
 {
@@ -33,6 +34,7 @@ namespace StudentNameWPF.ViewModels
         private string _roomSearchText = string.Empty;
         private ObservableCollection<Customer> _filteredCustomers = new();
         private ObservableCollection<RoomInformation> _filteredRooms = new();
+        private BookingDisplayModel? _selectedBooking;
 
         public Customer CurrentUser
         {
@@ -80,6 +82,12 @@ namespace StudentNameWPF.ViewModels
         {
             get => _selectedRoom;
             set => SetProperty(ref _selectedRoom, value);
+        }
+
+        public BookingDisplayModel? SelectedBooking
+        {
+            get => _selectedBooking;
+            set => SetProperty(ref _selectedBooking, value);
         }
 
         public string CustomerSearchText
@@ -132,6 +140,9 @@ namespace StudentNameWPF.ViewModels
         public RelayCommand ClearRoomSearchCommand { get; }
         public RelayCommand EditProfileCommand { get; }
         public RelayCommand ChangePasswordCommand { get; }
+        public RelayCommand AddBookingCommand { get; }
+        public RelayCommand EditBookingCommand { get; }
+        public RelayCommand CancelBookingCommand { get; }
         public RelayCommand LogoutCommand { get; set; } = null!;
 
         public MainViewModel(Customer currentUser)
@@ -171,6 +182,9 @@ namespace StudentNameWPF.ViewModels
             ClearRoomSearchCommand = new RelayCommand(ClearRoomSearch);
             EditProfileCommand = new RelayCommand(EditProfile);
             ChangePasswordCommand = new RelayCommand(ChangePassword);
+            AddBookingCommand = new RelayCommand(AddBooking);
+            EditBookingCommand = new RelayCommand(EditBooking, () => SelectedBooking != null);
+            CancelBookingCommand = new RelayCommand(CancelBooking, () => SelectedBooking != null);
 
             // Start realtime data service
             _realtimeDataService.StartRealtimeUpdates();
@@ -825,6 +839,87 @@ namespace StudentNameWPF.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"ChangePassword: Exception - {ex.Message}");
                 MessageBox.Show($"Error changing password: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region Booking Management
+
+        private async void AddBooking()
+        {
+            try
+            {
+                var dialog = new Views.BookingDialog(CurrentUser.CustomerID);
+                
+                if (dialog.ShowDialog() == true)
+                {
+                    var newBooking = dialog.GetBooking();
+                    if (newBooking != null)
+                    {
+                        await _bookingService.CreateBookingAsync(newBooking);
+                        await LoadDataAsync();
+                        await _realtimeDataService.ForceUpdateAsync();
+                        MessageBox.Show("Booking created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error creating booking: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void EditBooking()
+        {
+            if (SelectedBooking == null) return;
+
+            try
+            {
+                // Convert BookingDisplayModel back to Booking
+                var booking = SelectedBooking.ToBooking();
+                var dialog = new Views.BookingDialog(booking);
+                
+                if (dialog.ShowDialog() == true)
+                {
+                    var updatedBooking = dialog.GetBooking();
+                    if (updatedBooking != null)
+                    {
+                        await _bookingService.UpdateBookingAsync(updatedBooking);
+                        await LoadDataAsync();
+                        await _realtimeDataService.ForceUpdateAsync();
+                        MessageBox.Show("Booking updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating booking: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void CancelBooking()
+        {
+            if (SelectedBooking == null) return;
+
+            var result = MessageBox.Show($"Are you sure you want to cancel booking #{SelectedBooking.BookingID}?\n\nThis action cannot be undone.", 
+                "Confirm Cancel", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    var booking = SelectedBooking.ToBooking();
+                    booking.BookingStatus = 3; // Cancelled
+                    await _bookingService.UpdateBookingAsync(booking);
+                    await LoadDataAsync();
+                    await _realtimeDataService.ForceUpdateAsync();
+                    MessageBox.Show("Booking cancelled successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error cancelling booking: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FUMiniHotelSystem.Models\FUMiniHotelSystem.Models.csproj" />
+    <ProjectReference Include="..\FUMiniHotelSystem.DataAccess\FUMiniHotelSystem.DataAccess.csproj" />
     <ProjectReference Include="..\FUMiniHotelSystem.BusinessLogic\FUMiniHotelSystem.BusinessLogic.csproj" />
   </ItemGroup>
 
