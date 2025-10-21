@@ -323,7 +323,6 @@
                                         <DataGridTextColumn Header="Check In" Binding="{Binding CheckInDate, StringFormat=MM/dd/yyyy}" Width="120"/>
                                         <DataGridTextColumn Header="Check Out" Binding="{Binding CheckOutDate, StringFormat=MM/dd/yyyy}" Width="120"/>
                                         <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat='${0:0}'}" Width="120"/>
-                                        <DataGridTextColumn Header="Status" Binding="{Binding BookingStatus}" Width="80"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </StackPanel>
