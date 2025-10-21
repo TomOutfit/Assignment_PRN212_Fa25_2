@@ -1,77 +1,155 @@
 using FUMiniHotelSystem.DataAccess.Interfaces;
 using FUMiniHotelSystem.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace FUMiniHotelSystem.DataAccess
 {
-    public class RoomRepository : IRoomRepository
+    public class RoomRepository : SqlRepository<RoomInformation>, IRoomRepository
     {
-        private readonly FUMiniHotelDbContext _context;
+        public RoomRepository(string connectionString) : base(connectionString) { }
 
-        public RoomRepository()
+        public override async Task<List<RoomInformation>> GetAllAsync()
         {
-            _context = DbContextFactory.CreateDbContext();
+            var rooms = new List<RoomInformation>();
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand(@"
+                SELECT r.*, rt.RoomTypeName, rt.TypeDescription, rt.TypeNote
+                FROM RoomInformation r
+                LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
+                WHERE r.RoomStatus = 1", connection);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                rooms.Add(MapRoomFromReader(reader));
+            }
+            
+            return rooms;
         }
 
-        public async Task<List<RoomInformation>> GetAllAsync()
+        public override async Task<RoomInformation?> GetByIdAsync(int id)
         {
-            return await _context.RoomInformation
-                .Include(r => r.RoomType)
-                .ToListAsync();
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand(@"
+                SELECT r.*, rt.RoomTypeName, rt.TypeDescription, rt.TypeNote
+                FROM RoomInformation r
+                LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
+                WHERE r.RoomID = @id AND r.RoomStatus = 1", connection);
+            command.Parameters.AddWithValue("@id", id);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            if (await reader.ReadAsync())
+            {
+                return MapRoomFromReader(reader);
+            }
+            
+            return null;
         }
 
-        public async Task<RoomInformation?> GetByIdAsync(int id)
+        public override async Task<RoomInformation> AddAsync(RoomInformation entity)
         {
-            return await _context.RoomInformation
-                .Include(r => r.RoomType)
-                .FirstOrDefaultAsync(r => r.RoomID == id);
-        }
-
-        public async Task<RoomInformation> AddAsync(RoomInformation entity)
-        {
-            _context.RoomInformation.Add(entity);
-            await _context.SaveChangesAsync();
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand(@"
+                INSERT INTO RoomInformation (RoomNumber, RoomDescription, RoomMaxCapacity, RoomStatus, RoomPricePerDate, RoomTypeID)
+                VALUES (@roomNumber, @roomDescription, @roomMaxCapacity, @roomStatus, @roomPricePerDate, @roomTypeId);
+                SELECT SCOPE_IDENTITY();", connection);
+            
+            command.Parameters.AddWithValue("@roomNumber", entity.RoomNumber);
+            command.Parameters.AddWithValue("@roomDescription", entity.RoomDescription ?? string.Empty);
+            command.Parameters.AddWithValue("@roomMaxCapacity", entity.RoomMaxCapacity);
+            command.Parameters.AddWithValue("@roomStatus", entity.RoomStatus);
+            command.Parameters.AddWithValue("@roomPricePerDate", entity.RoomPricePerDate);
+            command.Parameters.AddWithValue("@roomTypeId", entity.RoomTypeID);
+            
+            var id = await command.ExecuteScalarAsync();
+            entity.RoomID = Convert.ToInt32(id);
             return entity;
         }
 
-        public async Task<bool> UpdateAsync(RoomInformation entity)
+        public override async Task<bool> UpdateAsync(RoomInformation entity)
         {
-            _context.RoomInformation.Update(entity);
-            var result = await _context.SaveChangesAsync();
-            return result > 0;
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand(@"
+                UPDATE RoomInformation 
+                SET RoomNumber = @roomNumber, RoomDescription = @roomDescription, 
+                    RoomMaxCapacity = @roomMaxCapacity, RoomStatus = @roomStatus, 
+                    RoomPricePerDate = @roomPricePerDate, RoomTypeID = @roomTypeId
+                WHERE RoomID = @id", connection);
+            
+            command.Parameters.AddWithValue("@id", entity.RoomID);
+            command.Parameters.AddWithValue("@roomNumber", entity.RoomNumber);
+            command.Parameters.AddWithValue("@roomDescription", entity.RoomDescription ?? string.Empty);
+            command.Parameters.AddWithValue("@roomMaxCapacity", entity.RoomMaxCapacity);
+            command.Parameters.AddWithValue("@roomStatus", entity.RoomStatus);
+            command.Parameters.AddWithValue("@roomPricePerDate", entity.RoomPricePerDate);
+            command.Parameters.AddWithValue("@roomTypeId", entity.RoomTypeID);
+            
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+            return rowsAffected > 0;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public override async Task<bool> DeleteAsync(int id)
         {
-            var room = await _context.RoomInformation.FindAsync(id);
-            if (room != null)
-            {
-                _context.RoomInformation.Remove(room);
-                var result = await _context.SaveChangesAsync();
-                return result > 0;
-            }
-            return false;
-        }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand("UPDATE RoomInformation SET RoomStatus = 2 WHERE RoomID = @id", connection);
+            command.Parameters.AddWithValue("@id", id);
+            
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+            return rowsAffected > 0;
         }
 
         public async Task<List<RoomInformation>> GetActiveRoomsAsync()
         {
-            return await _context.RoomInformation
-                .Include(r => r.RoomType)
-                .Where(r => r.RoomStatus == 1)
-                .ToListAsync();
+            return await GetAllAsync();
         }
 
         public async Task<List<RoomInformation>> GetRoomsByTypeAsync(int roomTypeId)
         {
-            return await _context.RoomInformation
-                .Include(r => r.RoomType)
-                .Where(r => r.RoomTypeID == roomTypeId && r.RoomStatus == 1)
-                .ToListAsync();
+            var rooms = new List<RoomInformation>();
+            using var connection = await GetConnectionAsync();
+            using var command = new SqlCommand(@"
+                SELECT r.*, rt.RoomTypeName, rt.TypeDescription, rt.TypeNote
+                FROM RoomInformation r
+                LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
+                WHERE r.RoomTypeID = @roomTypeId AND r.RoomStatus = 1", connection);
+            command.Parameters.AddWithValue("@roomTypeId", roomTypeId);
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                rooms.Add(MapRoomFromReader(reader));
+            }
+            
+            return rooms;
+        }
+
+        private static RoomInformation MapRoomFromReader(SqlDataReader reader)
+        {
+            var room = new RoomInformation
+            {
+                RoomID = reader.GetInt32("RoomID"),
+                RoomNumber = reader.GetString("RoomNumber"),
+                RoomDescription = reader.IsDBNull("RoomDescription") ? string.Empty : reader.GetString("RoomDescription"),
+                RoomMaxCapacity = reader.GetInt32("RoomMaxCapacity"),
+                RoomStatus = reader.GetInt32("RoomStatus"),
+                RoomPricePerDate = reader.GetDecimal("RoomPricePerDate"),
+                RoomTypeID = reader.GetInt32("RoomTypeID")
+            };
+
+            // Map room type if available
+            if (!reader.IsDBNull("RoomTypeName"))
+            {
+                room.RoomType = new RoomType
+                {
+                    RoomTypeID = room.RoomTypeID,
+                    RoomTypeName = reader.GetString("RoomTypeName"),
+                    TypeDescription = reader.IsDBNull("TypeDescription") ? string.Empty : reader.GetString("TypeDescription"),
+                    TypeNote = reader.IsDBNull("TypeNote") ? string.Empty : reader.GetString("TypeNote")
+                };
+            }
+
+            return room;
         }
     }
 }

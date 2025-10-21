@@ -68,7 +68,7 @@ namespace StudentNameWPF.Views
             // Load rooms
             await LoadRooms();
             
-            // Set default dates
+            // Set default dates and data for edit mode
             if (_originalBooking == null)
             {
                 CheckInDatePicker.SelectedDate = DateTime.Today;
@@ -76,9 +76,13 @@ namespace StudentNameWPF.Views
             }
             else
             {
+                // Load all booking data for edit mode
                 CheckInDatePicker.SelectedDate = _originalBooking.CheckInDate;
                 CheckOutDatePicker.SelectedDate = _originalBooking.CheckOutDate;
                 NotesTextBox.Text = _originalBooking.Notes;
+                
+                // Ensure ViewModel has all the booking data
+                _viewModel.LoadBooking(_originalBooking);
             }
             
             UpdatePriceCalculation();
@@ -267,26 +271,39 @@ namespace StudentNameWPF.Views
         {
             if (DialogResult == true && ValidateBooking())
             {
-                var booking = new Booking
-                {
-                    CustomerID = _viewModel.CustomerID,
-                    RoomID = (int)RoomComboBox.SelectedValue,
-                    CheckInDate = CheckInDatePicker.SelectedDate ?? DateTime.Today,
-                    CheckOutDate = CheckOutDatePicker.SelectedDate ?? DateTime.Today.AddDays(1),
-                    TotalAmount = _viewModel.TotalAmount,
-                    Notes = NotesTextBox.Text,
-                    BookingStatus = 1, // Pending
-                    CreatedDate = DateTime.Now
-                };
-
                 if (_originalBooking != null)
                 {
-                    booking.BookingID = _originalBooking.BookingID;
-                    booking.CreatedDate = _originalBooking.CreatedDate;
-                    booking.BookingStatus = _originalBooking.BookingStatus;
+                    // Edit mode - cập nhật booking hiện tại
+                    var booking = new Booking
+                    {
+                        BookingID = _originalBooking.BookingID, // Giữ nguyên ID
+                        CustomerID = _viewModel.CustomerID,
+                        RoomID = (int)RoomComboBox.SelectedValue,
+                        CheckInDate = CheckInDatePicker.SelectedDate ?? DateTime.Today,
+                        CheckOutDate = CheckOutDatePicker.SelectedDate ?? DateTime.Today.AddDays(1),
+                        TotalAmount = _viewModel.TotalAmount,
+                        Notes = NotesTextBox.Text,
+                        BookingStatus = _originalBooking.BookingStatus, // Giữ nguyên trạng thái Booked
+                        CreatedDate = _originalBooking.CreatedDate // Giữ nguyên ngày tạo
+                    };
+                    return booking;
                 }
-
-                return booking;
+                else
+                {
+                    // Create mode - tạo booking mới
+                    var booking = new Booking
+                    {
+                        CustomerID = _viewModel.CustomerID,
+                        RoomID = (int)RoomComboBox.SelectedValue,
+                        CheckInDate = CheckInDatePicker.SelectedDate ?? DateTime.Today,
+                        CheckOutDate = CheckOutDatePicker.SelectedDate ?? DateTime.Today.AddDays(1),
+                        TotalAmount = _viewModel.TotalAmount,
+                        Notes = NotesTextBox.Text,
+                        BookingStatus = 1, // Booked
+                        CreatedDate = DateTime.Now
+                    };
+                    return booking;
+                }
             }
 
             return null;

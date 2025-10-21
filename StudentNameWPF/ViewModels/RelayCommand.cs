@@ -61,5 +61,10 @@ namespace StudentNameWPF.ViewModels
         {
             _execute((T)parameter!);
         }
+
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 }

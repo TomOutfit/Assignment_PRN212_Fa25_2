@@ -6,6 +6,7 @@ using FUMiniHotelSystem.Models;
 using StudentNameWPF.ViewModels;
 using System.Windows.Input;
 using System.Windows;
+using System.IO;
 
 namespace StudentNameWPF.ViewModels
 {
@@ -22,13 +23,16 @@ namespace StudentNameWPF.ViewModels
         private DateTime _checkOutDate = DateTime.Today.AddDays(1);
         private string _notes = string.Empty;
         private Customer? _currentCustomer;
+        private Booking? _currentBooking;
 
         public BookingDialogViewModel()
         {
-            var roomRepository = new RoomRepository();
-            var roomTypeRepository = new RoomTypeRepository();
-            var bookingRepository = new BookingRepository();
-            var customerRepository = new CustomerRepository();
+            var connectionString = GetConnectionString();
+            
+            var roomRepository = new RoomRepository(connectionString);
+            var roomTypeRepository = new RoomTypeRepository(connectionString);
+            var bookingRepository = new BookingRepository(connectionString);
+            var customerRepository = new CustomerRepository(connectionString);
             
             _roomService = new RoomService(roomRepository, roomTypeRepository);
             _bookingService = new BookingService(bookingRepository, roomRepository, customerRepository);
@@ -104,6 +108,12 @@ namespace StudentNameWPF.ViewModels
             set => SetProperty(ref _currentCustomer, value);
         }
 
+        public Booking? CurrentBooking
+        {
+            get => _currentBooking;
+            set => SetProperty(ref _currentBooking, value);
+        }
+
         public int DurationDays
         {
             get
@@ -148,6 +158,7 @@ namespace StudentNameWPF.ViewModels
 
         public async void LoadBooking(Booking booking)
         {
+            CurrentBooking = booking;
             CustomerID = booking.CustomerID;
             TotalAmount = booking.TotalAmount;
             CheckInDate = booking.CheckInDate;
@@ -163,6 +174,16 @@ namespace StudentNameWPF.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading customer for edit: {ex.Message}");
             }
+            
+            // Load room information for edit mode
+            try
+            {
+                await LoadRoomForEditAsync(booking.RoomID);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading room for edit: {ex.Message}");
+            }
         }
 
         public async Task LoadCustomerAsync(int customerId)
@@ -176,6 +197,42 @@ namespace StudentNameWPF.ViewModels
             catch (Exception ex)
             {
                 throw new Exception($"Error loading customer: {ex.Message}", ex);
+            }
+        }
+
+        public async Task LoadRoomForEditAsync(int roomId)
+        {
+            try
+            {
+                // Load all rooms first
+                await LoadRoomsAsync();
+                
+                // Find and select the specific room
+                var room = AvailableRooms.FirstOrDefault(r => r.RoomID == roomId);
+                if (room != null)
+                {
+                    SelectedRoom = room;
+                }
+                else
+                {
+                    // If room not found in available rooms, load it separately
+                    var connectionString = GetConnectionString();
+                    var roomService = new RoomService(new RoomRepository(connectionString), new RoomTypeRepository(connectionString));
+                    var specificRoom = await roomService.GetRoomByIdAsync(roomId);
+                    if (specificRoom != null)
+                    {
+                        // Add the room to available rooms if not already there
+                        if (!AvailableRooms.Any(r => r.RoomID == roomId))
+                        {
+                            AvailableRooms.Add(specificRoom);
+                        }
+                        SelectedRoom = specificRoom;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error loading room for edit: {ex.Message}", ex);
             }
         }
 
@@ -228,21 +285,37 @@ namespace StudentNameWPF.ViewModels
                     return;
                 }
 
-                // Create booking object
-                var booking = new Booking
+                // Check if this is edit mode (booking already exists)
+                if (CurrentBooking != null)
                 {
-                    CustomerID = CustomerID,
-                    RoomID = SelectedRoom.RoomID,
-                    CheckInDate = CheckInDate,
-                    CheckOutDate = CheckOutDate,
-                    TotalAmount = TotalAmount,
-                    Notes = Notes,
-                    BookingStatus = 1, // Pending
-                    CreatedDate = DateTime.Now
-                };
+                    // Edit mode - update existing booking
+                    CurrentBooking.CustomerID = CustomerID;
+                    CurrentBooking.RoomID = SelectedRoom.RoomID;
+                    CurrentBooking.CheckInDate = CheckInDate;
+                    CurrentBooking.CheckOutDate = CheckOutDate;
+                    CurrentBooking.TotalAmount = TotalAmount;
+                    CurrentBooking.Notes = Notes;
+                    // Keep original BookingStatus and CreatedDate
+                    
+                    await _bookingService.UpdateBookingAsync(CurrentBooking);
+                }
+                else
+                {
+                    // Create mode - create new booking
+                    var booking = new Booking
+                    {
+                        CustomerID = CustomerID,
+                        RoomID = SelectedRoom.RoomID,
+                        CheckInDate = CheckInDate,
+                        CheckOutDate = CheckOutDate,
+                        TotalAmount = TotalAmount,
+                        Notes = Notes,
+                        BookingStatus = 1, // Booked (trạng thái mặc định cho booking mới)
+                        CreatedDate = DateTime.Now
+                    };
 
-                // Save booking using BLL
-                await _bookingService.CreateBookingAsync(booking);
+                    await _bookingService.CreateBookingAsync(booking);
+                }
 
                 // Show success message
                 var customerName = CurrentCustomer?.CustomerFullName ?? "Customer";
@@ -255,7 +328,17 @@ namespace StudentNameWPF.ViewModels
                               "Booking Confirmed", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Trigger booking confirmed event
-                BookingConfirmed?.Invoke(booking);
+                BookingConfirmed?.Invoke(CurrentBooking ?? new Booking
+                {
+                    CustomerID = CustomerID,
+                    RoomID = SelectedRoom.RoomID,
+                    CheckInDate = CheckInDate,
+                    CheckOutDate = CheckOutDate,
+                    TotalAmount = TotalAmount,
+                    Notes = Notes,
+                    BookingStatus = 1,
+                    CreatedDate = DateTime.Now
+                });
             }
             catch (Exception ex)
             {
@@ -276,5 +359,27 @@ namespace StudentNameWPF.ViewModels
 
         // Event for booking confirmation
         public event Action<Booking>? BookingConfirmed;
+
+        private string GetConnectionString()
+        {
+            try
+            {
+                // Read from appsettings.json
+                var json = File.ReadAllText("appsettings.json");
+                var config = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                
+                if (config != null && config.ContainsKey("ConnectionString"))
+                {
+                    return config["ConnectionString"]?.ToString() ?? "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;TrustServerCertificate=true;";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error reading connection string: {ex.Message}");
+            }
+            
+            // Default connection string
+            return "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;TrustServerCertificate=true;";
+        }
     }
 }

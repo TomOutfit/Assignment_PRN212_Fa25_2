@@ -17,7 +17,7 @@ namespace FUMiniHotelSystem.Models
         [Required]
         public decimal TotalAmount { get; set; }
         
-        public int BookingStatus { get; set; } = 1; // 1: Pending, 2: Confirmed, 3: Cancelled, 4: Completed
+        public int BookingStatus { get; set; } = 1; // 1: Booked (đơn giản hóa - chỉ có trạng thái Booked)
         
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         
@@ -26,6 +26,6 @@ namespace FUMiniHotelSystem.Models
         
         // Navigation properties
         public Customer? Customer { get; set; }
-        public RoomInformation? RoomInformation { get; set; }
+        public RoomInformation? Room { get; set; }
     }
 }

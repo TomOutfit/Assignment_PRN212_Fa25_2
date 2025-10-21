@@ -117,4 +117,22 @@ namespace StudentNameWPF
             throw new NotImplementedException();
         }
     }
+
+    public class BookingStatusConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int status)
+            {
+                // Đơn giản hóa - chỉ có trạng thái Booked
+                return status == 1 ? "Booked" : "Unknown";
+            }
+            return "Unknown";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
