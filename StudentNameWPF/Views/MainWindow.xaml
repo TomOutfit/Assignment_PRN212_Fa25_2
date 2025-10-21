@@ -456,7 +456,6 @@
                                 <DataGridTextColumn Header="Email" Binding="{Binding EmailAddress}" Width="250"/>
                                 <DataGridTextColumn Header="Telephone" Binding="{Binding Telephone}" Width="120"/>
                                 <DataGridTextColumn Header="Birthday" Binding="{Binding CustomerBirthday, StringFormat=MM/dd/yyyy}" Width="100"/>
-                                <DataGridTextColumn Header="Status" Binding="{Binding CustomerStatus}" Width="80"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
@@ -589,7 +588,6 @@
                                 <DataGridTextColumn Header="Capacity" Binding="{Binding RoomMaxCapacity}" Width="80"/>
                                 <DataGridTextColumn Header="Price" Binding="{Binding RoomPricePerDate, StringFormat='${0:0}'}" Width="120"/>
                                 <DataGridTextColumn Header="Type" Binding="{Binding RoomTypeID, Converter={StaticResource RoomTypeConverter}}" Width="120"/>
-                                <DataGridTextColumn Header="Status" Binding="{Binding RoomStatus}" Width="80"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
@@ -705,8 +703,6 @@
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Birthday:" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="#374151"/>
                                     <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentUser.CustomerBirthday, StringFormat=MM/dd/yyyy}" Margin="0,0,0,10" Foreground="#6B7280"/>
                                     
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Status:" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="#374151"/>
-                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentUser.CustomerStatus}" Margin="0,0,0,10" Foreground="#6B7280"/>
                                 </Grid>
                                 
                                 <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
