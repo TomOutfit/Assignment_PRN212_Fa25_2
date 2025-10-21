@@ -64,7 +64,6 @@ namespace FUMiniHotelSystem.BusinessLogic
             var allBookings = await _bookingRepository.GetAllAsync();
             var hasConflict = allBookings.Any(b => 
                 b.RoomID == booking.RoomID && 
-                b.BookingStatus == 1 && // Chỉ kiểm tra booking đã booked
                 ((b.CheckInDate < booking.CheckOutDate && b.CheckOutDate > booking.CheckInDate))
             );
 
@@ -107,7 +106,6 @@ namespace FUMiniHotelSystem.BusinessLogic
             var hasConflict = allBookings.Any(b => 
                 b.RoomID == booking.RoomID && 
                 b.BookingID != booking.BookingID && // Exclude current booking
-                b.BookingStatus == 1 && // Chỉ kiểm tra booking đã booked
                 ((b.CheckInDate < booking.CheckOutDate && b.CheckOutDate > booking.CheckInDate))
             );
 
@@ -121,14 +119,8 @@ namespace FUMiniHotelSystem.BusinessLogic
 
         public async Task<bool> CancelBookingAsync(int id)
         {
-            // Set booking status to 0 (Not Booked) thay vì xóa
-            var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking != null)
-            {
-                booking.BookingStatus = 0; // Not Booked
-                return await _bookingRepository.UpdateAsync(booking);
-            }
-            return false;
+            // Xóa hoàn toàn booking khỏi database
+            return await _bookingRepository.DeleteAsync(id);
         }
 
         // Loại bỏ các method không cần thiết cho trạng thái đơn giản
@@ -143,7 +135,6 @@ namespace FUMiniHotelSystem.BusinessLogic
             // Get all bookings in the date range using LINQ (đơn giản hóa)
             var allBookings = await _bookingRepository.GetAllAsync();
             var conflictingBookings = allBookings.Where(b => 
-                b.BookingStatus == 1 && // Chỉ kiểm tra booking đã booked
                 b.CheckInDate < checkOut && 
                 b.CheckOutDate > checkIn
             ).ToList();
@@ -168,7 +159,6 @@ namespace FUMiniHotelSystem.BusinessLogic
             // Get conflicting bookings using LINQ (đơn giản hóa)
             var allBookings = await _bookingRepository.GetAllAsync();
             var conflictingBookings = allBookings.Where(b => 
-                b.BookingStatus == 1 && // Chỉ kiểm tra booking đã booked
                 b.CheckInDate < checkOut && 
                 b.CheckOutDate > checkIn
             ).ToList();
@@ -193,7 +183,6 @@ namespace FUMiniHotelSystem.BusinessLogic
             // Get conflicting bookings using LINQ (đơn giản hóa)
             var allBookings = await _bookingRepository.GetAllAsync();
             var conflictingBookings = allBookings.Where(b => 
-                b.BookingStatus == 1 && // Chỉ kiểm tra booking đã booked
                 b.CheckInDate < checkOut && 
                 b.CheckOutDate > checkIn
             ).ToList();

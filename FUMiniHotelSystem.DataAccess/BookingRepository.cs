@@ -21,7 +21,7 @@ namespace FUMiniHotelSystem.DataAccess
                 LEFT JOIN Customers c ON b.CustomerID = c.CustomerID
                 LEFT JOIN RoomInformation r ON b.RoomID = r.RoomID
                 LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
-                WHERE b.BookingStatus != 3", connection);
+                ", connection);
             using var reader = await command.ExecuteReaderAsync();
             
             while (await reader.ReadAsync())
@@ -43,7 +43,7 @@ namespace FUMiniHotelSystem.DataAccess
                 LEFT JOIN Customers c ON b.CustomerID = c.CustomerID
                 LEFT JOIN RoomInformation r ON b.RoomID = r.RoomID
                 LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
-                WHERE b.BookingID = @id AND b.BookingStatus != 3", connection);
+                WHERE b.BookingID = @id", connection);
             command.Parameters.AddWithValue("@id", id);
             using var reader = await command.ExecuteReaderAsync();
             
@@ -103,7 +103,7 @@ namespace FUMiniHotelSystem.DataAccess
         public override async Task<bool> DeleteAsync(int id)
         {
             using var connection = await GetConnectionAsync();
-            using var command = new SqlCommand("UPDATE Bookings SET BookingStatus = 3 WHERE BookingID = @id", connection);
+            using var command = new SqlCommand("DELETE FROM Bookings WHERE BookingID = @id", connection);
             command.Parameters.AddWithValue("@id", id);
             
             var rowsAffected = await command.ExecuteNonQueryAsync();
@@ -122,7 +122,7 @@ namespace FUMiniHotelSystem.DataAccess
                 LEFT JOIN Customers c ON b.CustomerID = c.CustomerID
                 LEFT JOIN RoomInformation r ON b.RoomID = r.RoomID
                 LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
-                WHERE b.CustomerID = @customerId AND b.BookingStatus != 3", connection);
+                WHERE b.CustomerID = @customerId", connection);
             command.Parameters.AddWithValue("@customerId", customerId);
             using var reader = await command.ExecuteReaderAsync();
             
@@ -146,7 +146,7 @@ namespace FUMiniHotelSystem.DataAccess
                 LEFT JOIN Customers c ON b.CustomerID = c.CustomerID
                 LEFT JOIN RoomInformation r ON b.RoomID = r.RoomID
                 LEFT JOIN RoomTypes rt ON r.RoomTypeID = rt.RoomTypeID
-                WHERE b.CheckInDate >= @startDate AND b.CheckOutDate <= @endDate AND b.BookingStatus != 3", connection);
+                WHERE b.CheckInDate >= @startDate AND b.CheckOutDate <= @endDate", connection);
             command.Parameters.AddWithValue("@startDate", startDate);
             command.Parameters.AddWithValue("@endDate", endDate);
             using var reader = await command.ExecuteReaderAsync();

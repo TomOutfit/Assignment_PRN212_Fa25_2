@@ -67,7 +67,7 @@ BEGIN
         CheckInDate datetime2 NOT NULL,
         CheckOutDate datetime2 NOT NULL,
         TotalAmount decimal(18,2) NOT NULL,
-        BookingStatus int NOT NULL DEFAULT 1, -- 1: Pending, 2: Confirmed, 3: Cancelled, 4: Completed
+        BookingStatus int NOT NULL DEFAULT 1, -- 1: Booked, 0: Not Booked
         CreatedDate datetime2 NOT NULL DEFAULT GETDATE(),
         Notes nvarchar(500),
         FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
