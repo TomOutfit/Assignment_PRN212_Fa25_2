@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using System.Data;
 using FUMiniHotelSystem.DataAccess.Interfaces;
 using FUMiniHotelSystem.Models;
 
@@ -6,55 +7,54 @@ namespace FUMiniHotelSystem.DataAccess
 {
     public class SqlRepository<T> : IRepository<T> where T : class
     {
-        protected readonly HotelDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        protected readonly string _connectionString;
 
-        public SqlRepository(HotelDbContext context)
+        public SqlRepository(string connectionString)
         {
-            _context = context;
-            _dbSet = _context.Set<T>();
+            _connectionString = connectionString;
+        }
+
+        protected async Task<SqlConnection> GetConnectionAsync()
+        {
+            var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            return connection;
         }
 
         public virtual async Task<List<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            // This will be implemented by derived classes
+            return new List<T>();
         }
 
         public virtual async Task<T?> GetByIdAsync(int id)
         {
-            var entity = await _dbSet.FindAsync(id);
-            return entity;
+            // This will be implemented by derived classes
+            return null;
         }
 
         public virtual async Task<T> AddAsync(T entity)
         {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            // This will be implemented by derived classes
             return entity;
         }
 
         public virtual async Task<bool> UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
-            var result = await _context.SaveChangesAsync();
-            return result > 0;
+            // This will be implemented by derived classes
+            return false;
         }
 
         public virtual async Task<bool> DeleteAsync(int id)
         {
-            var entity = await GetByIdAsync(id);
-            if (entity != null)
-            {
-                _dbSet.Remove(entity);
-                var result = await _context.SaveChangesAsync();
-                return result > 0;
-            }
+            // This will be implemented by derived classes
             return false;
         }
 
         public virtual async Task SaveChangesAsync()
         {
-            await _context.SaveChangesAsync();
+            // For SQL repositories, changes are committed immediately
+            await Task.CompletedTask;
         }
     }
 }

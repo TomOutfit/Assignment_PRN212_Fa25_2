@@ -9,6 +9,7 @@
         <local:TotalRevenueConverter x:Key="TotalRevenueConverter"/>
         <local:BooleanToTextConverter x:Key="BooleanToTextConverter"/>
         <local:RoomTypeConverter x:Key="RoomTypeConverter"/>
+        <local:BookingStatusConverter x:Key="BookingStatusConverter"/>
         
         <!-- Drop Shadow Effect -->
         <DropShadowEffect x:Key="DropShadowEffect" 

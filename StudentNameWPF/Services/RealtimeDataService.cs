@@ -25,10 +25,12 @@ namespace StudentNameWPF.Services
         
         public RealtimeDataService()
         {
-            _customerRepository = new CustomerRepository();
-            _bookingRepository = new BookingRepository();
-            _roomRepository = new RoomRepository();
-            _roomTypeRepository = new RoomTypeRepository();
+            var connectionString = GetConnectionString();
+            
+            _customerRepository = new CustomerRepository(connectionString);
+            _bookingRepository = new BookingRepository(connectionString);
+            _roomRepository = new RoomRepository(connectionString);
+            _roomTypeRepository = new RoomTypeRepository(connectionString);
             _chartExportService = new ChartExportService();
         }
         
@@ -238,6 +240,28 @@ namespace StudentNameWPF.Services
                 System.Diagnostics.Debug.WriteLine($"RealtimeDataService: Error exporting data: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"RealtimeDataService: Export stack trace: {ex.StackTrace}");
             }
+        }
+
+        private string GetConnectionString()
+        {
+            try
+            {
+                // Read from appsettings.json
+                var json = File.ReadAllText("appsettings.json");
+                var config = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                
+                if (config != null && config.ContainsKey("ConnectionString"))
+                {
+                    return config["ConnectionString"]?.ToString() ?? "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;TrustServerCertificate=true;";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error reading connection string: {ex.Message}");
+            }
+            
+            // Default connection string
+            return "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;TrustServerCertificate=true;";
         }
     }
     

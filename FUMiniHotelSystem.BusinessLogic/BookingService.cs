@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using FUMiniHotelSystem.DataAccess.Interfaces;
 using FUMiniHotelSystem.Models;
 
@@ -38,69 +42,157 @@ namespace FUMiniHotelSystem.BusinessLogic
 
         public async Task<Booking> CreateBookingAsync(Booking booking)
         {
-            // Validate room availability
+            // Basic validation
+            if (booking.CheckInDate >= booking.CheckOutDate)
+            {
+                throw new InvalidOperationException("Ngày check-out phải sau ngày check-in");
+            }
+
+            if (booking.CheckInDate < DateTime.Today)
+            {
+                throw new InvalidOperationException("Ngày check-in không thể trong quá khứ");
+            }
+
+            // Check room availability
             var room = await _roomRepository.GetByIdAsync(booking.RoomID);
             if (room == null || room.RoomStatus != 1)
             {
-                throw new InvalidOperationException("Room not available");
+                throw new InvalidOperationException("Phòng không khả dụng");
             }
 
-            // Validate customer
-            var customer = await _customerRepository.GetByIdAsync(booking.CustomerID);
-            if (customer == null || customer.CustomerStatus != 1)
+            // Check for conflicts (đơn giản hóa - chỉ kiểm tra booking còn tồn tại)
+            var allBookings = await _bookingRepository.GetAllAsync();
+            var hasConflict = allBookings.Any(b => 
+                b.RoomID == booking.RoomID && 
+                ((b.CheckInDate < booking.CheckOutDate && b.CheckOutDate > booking.CheckInDate))
+            );
+
+            if (hasConflict)
             {
-                throw new InvalidOperationException("Customer not found or inactive");
+                throw new InvalidOperationException("Phòng đã được đặt trong khoảng thời gian này");
             }
 
-            // Generate new ID
+            // Generate new ID and set defaults
             var bookings = await _bookingRepository.GetAllAsync();
             booking.BookingID = bookings.Count > 0 ? bookings.Max(b => b.BookingID) + 1 : 1;
             booking.CreatedDate = DateTime.Now;
-            booking.BookingStatus = 1; // Pending
+            booking.BookingStatus = 1; // Booked (booking được tạo là đã booked)
 
             return await _bookingRepository.AddAsync(booking);
         }
 
         public async Task<bool> UpdateBookingAsync(Booking booking)
         {
+            // Basic validation
+            if (booking.CheckInDate >= booking.CheckOutDate)
+            {
+                throw new InvalidOperationException("Ngày check-out phải sau ngày check-in");
+            }
+
+            if (booking.CheckInDate < DateTime.Today)
+            {
+                throw new InvalidOperationException("Ngày check-in không thể trong quá khứ");
+            }
+
+            // Check room availability
+            var room = await _roomRepository.GetByIdAsync(booking.RoomID);
+            if (room == null || room.RoomStatus != 1)
+            {
+                throw new InvalidOperationException("Phòng không khả dụng");
+            }
+
+            // Check for conflicts (excluding current booking) - sửa lỗi edit
+            var allBookings = await _bookingRepository.GetAllAsync();
+            var hasConflict = allBookings.Any(b => 
+                b.RoomID == booking.RoomID && 
+                b.BookingID != booking.BookingID && // Exclude current booking
+                ((b.CheckInDate < booking.CheckOutDate && b.CheckOutDate > booking.CheckInDate))
+            );
+
+            if (hasConflict)
+            {
+                throw new InvalidOperationException("Phòng đã được đặt trong khoảng thời gian này");
+            }
+
             return await _bookingRepository.UpdateAsync(booking);
         }
 
         public async Task<bool> CancelBookingAsync(int id)
         {
-            var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking != null)
-            {
-                booking.BookingStatus = 3; // Cancelled
-                return await _bookingRepository.UpdateAsync(booking);
-            }
-            return false;
+            // Xóa hoàn toàn booking khỏi database
+            return await _bookingRepository.DeleteAsync(id);
         }
 
-        public async Task<bool> ConfirmBookingAsync(int id)
-        {
-            var booking = await _bookingRepository.GetByIdAsync(id);
-            if (booking != null)
-            {
-                booking.BookingStatus = 2; // Confirmed
-                return await _bookingRepository.UpdateAsync(booking);
-            }
-            return false;
-        }
+        // Loại bỏ các method không cần thiết cho trạng thái đơn giản
+        // Chỉ giữ lại Create, Update, Delete và Get methods
 
-        public async Task<List<RoomInformation>> GetAvailableRoomsAsync(DateTime checkInDate, DateTime checkOutDate)
+        public async Task<List<RoomInformation>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut)
         {
+            // Get all active rooms using LINQ
             var allRooms = await _roomRepository.GetAllAsync();
-            var bookings = await _bookingRepository.GetBookingsByDateRangeAsync(checkInDate, checkOutDate);
+            var activeRooms = allRooms.Where(r => r.RoomStatus == 1).ToList();
             
-            var bookedRoomIds = bookings
-                .Where(b => b.BookingStatus != 3) // Not cancelled
-                .Select(b => b.RoomID)
-                .ToHashSet();
+            // Get all bookings in the date range using LINQ (đơn giản hóa)
+            var allBookings = await _bookingRepository.GetAllAsync();
+            var conflictingBookings = allBookings.Where(b => 
+                b.CheckInDate < checkOut && 
+                b.CheckOutDate > checkIn
+            ).ToList();
+            
+            // Use LINQ to find available rooms
+            var availableRooms = activeRooms.Where(room => 
+                !conflictingBookings.Any(booking => booking.RoomID == room.RoomID)
+            ).ToList();
+            
+            return availableRooms;
+        }
 
-            return allRooms
-                .Where(room => room.RoomStatus == 1 && !bookedRoomIds.Contains(room.RoomID))
-                .ToList();
+        public async Task<List<RoomInformation>> GetAvailableRoomsByTypeAsync(DateTime checkIn, DateTime checkOut, int roomTypeId)
+        {
+            // Get all active rooms of specific type using LINQ
+            var allRooms = await _roomRepository.GetAllAsync();
+            var activeRoomsOfType = allRooms.Where(r => 
+                r.RoomStatus == 1 && 
+                r.RoomTypeID == roomTypeId
+            ).ToList();
+            
+            // Get conflicting bookings using LINQ (đơn giản hóa)
+            var allBookings = await _bookingRepository.GetAllAsync();
+            var conflictingBookings = allBookings.Where(b => 
+                b.CheckInDate < checkOut && 
+                b.CheckOutDate > checkIn
+            ).ToList();
+            
+            // Use LINQ to find available rooms of specific type
+            var availableRooms = activeRoomsOfType.Where(room => 
+                !conflictingBookings.Any(booking => booking.RoomID == room.RoomID)
+            ).ToList();
+            
+            return availableRooms;
+        }
+
+        public async Task<List<RoomInformation>> GetAvailableRoomsByCapacityAsync(DateTime checkIn, DateTime checkOut, int minCapacity)
+        {
+            // Get all active rooms with minimum capacity using LINQ
+            var allRooms = await _roomRepository.GetAllAsync();
+            var activeRoomsWithCapacity = allRooms.Where(r => 
+                r.RoomStatus == 1 && 
+                r.RoomMaxCapacity >= minCapacity
+            ).ToList();
+            
+            // Get conflicting bookings using LINQ (đơn giản hóa)
+            var allBookings = await _bookingRepository.GetAllAsync();
+            var conflictingBookings = allBookings.Where(b => 
+                b.CheckInDate < checkOut && 
+                b.CheckOutDate > checkIn
+            ).ToList();
+            
+            // Use LINQ to find available rooms with required capacity
+            var availableRooms = activeRoomsWithCapacity.Where(room => 
+                !conflictingBookings.Any(booking => booking.RoomID == room.RoomID)
+            ).ToList();
+            
+            return availableRooms;
         }
     }
 }

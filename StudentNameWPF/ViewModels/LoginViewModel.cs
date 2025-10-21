@@ -57,15 +57,18 @@ namespace StudentNameWPF.ViewModels
                     .Build();
                 System.Diagnostics.Debug.WriteLine("Configuration loaded successfully");
 
+                var connectionString = configuration["ConnectionString"] ?? "Server=(localdb)\\mssqllocaldb;Database=FUMiniHotelManagement;Trusted_Connection=true;TrustServerCertificate=true;";
+                
                 var appSettings = new AppSettings
                 {
                     AdminEmail = configuration["AdminEmail"] ?? "admin@FUMiniHotelSystem.com",
-                    AdminPassword = configuration["AdminPassword"] ?? "@@abc123@@"
+                    AdminPassword = configuration["AdminPassword"] ?? "@@abc123@@",
+                    ConnectionString = connectionString
                 };
                 System.Diagnostics.Debug.WriteLine($"AppSettings created - AdminEmail: {appSettings.AdminEmail}");
 
                 System.Diagnostics.Debug.WriteLine("Creating CustomerRepository...");
-                var customerRepository = new CustomerRepository();
+                var customerRepository = new CustomerRepository(connectionString);
                 System.Diagnostics.Debug.WriteLine("CustomerRepository created successfully");
                 
                 System.Diagnostics.Debug.WriteLine("Creating AuthenticationService...");
